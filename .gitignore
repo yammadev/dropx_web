@@ -1,18 +1,19 @@
-venv/
+# Entornos y dependencias
 .venv/
+node_modules/
 
-*.pyc
-__pycache__
+# Caché de Python
 __pycache__/
+*.py[cod]
 
-instance/
-
-.pytest_cache/
-.coverage
-htmlcov/
-
-dist/
-build/
-*.egg-info/
-
+# Variables de entorno
 .env
+
+# Base de datos local e instancia
+instance/*
+!instance/.gitkeep
+*.db
+*.sqlite3
+
+# Migraciones (Se ignora para mantener el repo limpio)
+migrations/

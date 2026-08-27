@@ -7,7 +7,7 @@ from flask import Blueprint
 
 web_bp = Blueprint("web", __name__)
 
-
+# [GET] /
 @web_bp.route("/")
 def index():
     """Muestra la vista principal del Dashboard.

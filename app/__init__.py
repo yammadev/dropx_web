@@ -1,12 +1,10 @@
-"""Módulo de la fábrica de la aplicación (Application Factory).
-
-Inicializa la app de Flask, carga la configuración de variables de entorno
-y registra los Blueprints de las rutas.
-"""
+"""Módulo de la fábrica de la aplicación (Application Factory)."""
 
 import os
 from flask import Flask
 from dotenv import load_dotenv
+from app.database import db, migrate
+from app.cli import register_cli_commands
 
 # Carga variables de entorno desde el archivo .env
 load_dotenv()
@@ -18,16 +16,30 @@ def create_app() -> Flask:
     Returns:
         Flask: Instancia de la aplicación Flask totalmente configurada.
     """
-    app = Flask(__name__)
+    flask_app = Flask(__name__)
 
     # Configuración de variables de entorno con fallback para desarrollo
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-secret-key-dev")
+    flask_app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "secret-key-dev")
+    flask_app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+        "DATABASE_URL", "sqlite:///dropx.db"
+    )
+    flask_app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Importación y registro de Blueprints
+    # Inicializar DB y Migrate
+    db.init_app(flask_app)
+    migrate.init_app(flask_app, db)
+
+    # Registrar comandos CLI personalizados
+    register_cli_commands(flask_app)
+
+    # Importar el paquete de modelos para Alembic
+    import app.models  # noqa: F401
+
+    # Blueprints
     from app.routes.api import api_bp
     from app.routes.web import web_bp
 
-    app.register_blueprint(web_bp)
-    app.register_blueprint(api_bp, url_prefix="/api")
+    flask_app.register_blueprint(web_bp)
+    flask_app.register_blueprint(api_bp, url_prefix="/api")
 
-    return app
+    return flask_app
