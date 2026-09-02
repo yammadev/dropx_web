@@ -1,0 +1,367 @@
+/* ==========================================================================
+   HOJA DE ESTILOS: Dropx.css - DROPX LOGISTICA
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. VARIABLES DE COLORES
+   (Cambia los códigos de color aquí para personalizar toda la página)
+   -------------------------------------------------------------------------- */
+:root {
+    --color-primario: #1d4ed8;       /* Azul principal de botones y bordes */
+    --color-primario-hover: #1e40af; /* Azul oscuro al pasar el cursor */
+    --color-fondo: rgb(255, 255, 254);          /* Fondo grisáceo general */
+    --color-tarjeta: #ffffff;        /* Fondo blanco de los contenedores */
+    --texto-principal: #0f172a;      /* Color de títulos y textos oscuros */
+    --texto-secundario: #475569;     /* Color de subtítulos y descripciones */
+    --color-borde: #e2e8f0;          /* Líneas divisorias */
+    --borde-redondeado: 16px;        /* Redondez de las esquinas */
+    --fuente: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   2. ESTILOS GENERALES
+   -------------------------------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--fuente);
+    background-color: var(--color-fondo);
+    color: var(--texto-principal);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   3. ENCABEZADO (HEADER)
+   -------------------------------------------------------------------------- */
+.header-container {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    padding: 2.5rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.logo-box {
+    flex-shrink: 0;
+    background: rgb(243, 239, 239);
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.logo-img {
+    max-width: 170px;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+}
+
+.header-titles h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+}
+
+.header-descripcion {
+    color: #cbd5e1 !important;
+    font-size: 1rem;
+    max-width: 800px;
+}
+
+/* --------------------------------------------------------------------------
+   4. LAYOUT PRINCIPAL (GRID DE 2 COLUMNAS)
+   -------------------------------------------------------------------------- */
+.main-layout {
+    max-width: 1200px;
+    width: 100%;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 380px 1fr; /* 380px para Login, el resto para Opciones */
+    gap: 2rem;
+    align-items: start;
+    flex-grow: 1;
+}
+
+/* --------------------------------------------------------------------------
+   5. CONTENEDORES / TARJETAS
+   -------------------------------------------------------------------------- */
+.login-container,
+.opciones-container {
+    background: var(--color-tarjeta);
+    border-radius: var(--borde-redondeado);
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    border: 1px solid var(--color-borde);
+    transition: all 0.3s ease;
+}
+
+.login-container:hover,
+.opciones-container:hover {
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto cuando el usuario inicia sesión */
+.opciones-container.resaltado {
+    border: 2px solid var(--color-primario);
+    box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.15);
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-borde);
+}
+
+.card-header h2,
+.card-header h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--texto-principal);
+    margin: 0.4rem 0 0.3rem 0;
+}
+
+.login-subtext,
+.opciones-subtext {
+    font-size: 0.9rem;
+    color: var(--texto-secundario);
+}
+
+.badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+    background-color: #dbeafe;
+    color: var(--color-primario);
+    border-radius: 6px;
+}
+
+.badge-accent {
+    background-color: #e0f2fe;
+    color: #0284c7;
+}
+
+/* --------------------------------------------------------------------------
+   6. FORMULARIO DE LOGIN
+   -------------------------------------------------------------------------- */
+#form-login {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid var(--color-borde);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper input:focus {
+    outline: none;
+    border-color: var(--color-primario);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 0.85rem;
+    background-color: var(--color-primario);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-top: 0.5rem;
+}
+
+.btn-submit:hover {
+    background-color: var(--color-primario-hover);
+}
+
+.btn-submit:active {
+    transform: scale(0.98);
+}
+
+.alerta {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.alerta-exito {
+    background-color: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+/* --------------------------------------------------------------------------
+   7. LISTA DE OPCIONES
+   -------------------------------------------------------------------------- */
+.lista-opciones {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.opcion-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.2rem;
+    background-color: #f8fafc;
+    border: 1px solid var(--color-borde);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.opcion-item:hover {
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+    transform: translateX(4px); /* Pequeño desplazamiento animado al pasar el ratón */
+    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.opcion-texto {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.opcion-num {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primario);
+    background: #e0e7ff;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+}
+
+.opcion-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--texto-principal);
+}
+
+.enlace-opcion {
+    text-decoration: none;
+}
+
+.btn-opcion {
+    padding: 0.5rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    background-color: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-opcion:hover {
+    background-color: var(--color-primario);
+    color: #ffffff;
+    border-color: var(--color-primario);
+}
+
+.btn-destacado {
+    background-color: #f0fdf4;
+    border-color: #86efac;
+    color: #15803d;
+}
+
+.btn-destacado:hover {
+    background-color: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff;
+}
+
+.btn-alerta {
+    background-color: #fff1f2;
+    border-color: #fecdd3;
+    color: #be123c;
+}
+
+.btn-alerta:hover {
+    background-color: #e11d48;
+    border-color: #e11d48;
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   8. PIE DE PÁGINA (FOOTER)
+   -------------------------------------------------------------------------- */
+.footer-container {
+    background-color: #0f172a;
+    color: #94a3b8;
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.875rem;
+    margin-top: auto;
+}
+
+.footer-container strong {
+    color: #f8fafc;
+}
+
+/* --------------------------------------------------------------------------
+   9. RESPONSIVE DESIGN (Móviles y Tablets)
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .main-layout {
+        grid-template-columns: 1fr; /* Pasa a 1 columna en vertical */
+    }
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 550px) {
+    .opcion-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .enlace-opcion,
+    .btn-opcion {
+        width: 100%;
+        text-align: center;
+    }
+}

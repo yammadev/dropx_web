@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <title>DropX Logistica</title>
+        <link rel="stylesheet" href="Dropx.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <header class="header-container">
+            <div class="header-content">
+                <div class="logo-box">
+                    <img src="Logo DropX actualizada.jpeg" alt="Logo de DropX Logistica" title="Logo de DropX Logistica" width="200" class="logo-img">
+                </div>
+                <div class="header-titles">
+                    <h1 title="Titulo de la página">Bienvenido a DropX Logistica</h1>
+                    <p title="Descripcion de la página" style="color: black;"> 
+                        DropX Logistica es una empresa dedicada a la gestión y seguimiento de paquetes. 
+                        Nuestro objetivo es proporcionar soluciones logísticas eficientes y confiables para nuestros clientes.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <main class="layouts">
+            <div id="seccion-login" class="login-container">
+                <div class="card-header">
+                    <div class="badge">Acceso seguro</div>
+                    <h2 title ="subtitulo de la página">Ingreso al Portal de Usuario</h2>
+                    <p class="login-subtext">Por favor, ingrese sus credenciales para acceder al portal de usuario.</p>
+                </div>
+                <form id="form-login">
+                    <div class="form-group">
+                        <label for="usuario">Usuario: </label>
+                        <div class="input-wrappe">
+                            <input type="text" id="usuario" placeholder="Ingrese su usuario" class="btn-opcion" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <div class="input-wrappe">
+                            <input type="password" id="password" placeholder="Digite su contraseña" class="btn-opcion" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-login" class="btn-submit">Iniciar Sesión</button>
+
+                    <div id="mensaje-estado" class="alerta" style="display: none;"></div>
+                </form>
+            </div>
+            
+            <div id="seccion-opciones" class="opciones-container">
+                <div class="card-header">
+                    <div class="badge">Módulos del sistema</div>
+                    <h3>Panel de control - Opciones disponibles</h3>
+                    <p class="opciones-subtext"> Selecciona una de las acciones para gestionar la logística:</p>
+                </div>
+                <ol class="lista-opciones">
+                    <li class="opcion-item">
+                        01
+                        Registrar repartidores
+                        <a href="Opciones/repartidores.html">
+                            <button type="button" class="btn-opcion">Registrar</button>
+                        </a>
+                    </li>
+
+                    <li class="opcion-item">
+                        02
+                        Crear y asignar paquetes
+                        <a href="Opciones/paquetes.html">
+                            <button type="button" class="btn-opcion">Consultar</button>
+                        </a>
+                    </li>
+
+                    <li class="opcion-item">
+                        03
+                        Consultar recogidas y entregas
+                        <a href="Opciones/consultas.html">
+                            <button type="button" class="btn-opcion">Consultar</button>
+                        </a>
+                    </li>
+
+                    <li class="opcion-item">
+                        04 
+                        Mapa de paquetes
+                        <a href="Opciones/mapa.html">
+                            <button type="button" class="btn-opcion btn-destacado">Mapa</button>
+                        </a>
+                    </li>
+
+                    <li class="opcion-item"> 
+                        05
+                        Actualizar estados
+                        <a href="Opciones/estados.html">
+                            <button type="button" class="btn-opcion">Actualizar</button>
+                        </a>
+                    </li>
+                    <li class="opcion-item">
+                        06 
+                        Registrar incidencias
+                        <a href="Opciones/incidencias.html">
+                            <button type="button" class="btn-opcion btn-alerta">Registrar</button>
+                        </a>
+                    </li>
+                    <li class="opcion-item">
+                        07 
+                        Monitorear operacion
+                        <a href="Opciones/monitoreo.html">
+                            <button type="button" class="btn-opcion">Ver operación</button>
+                        </a>
+                    </li>
+                </ol>
+            </div>
+        </main>
+        <footer class="footer-container">
+            <p>&copy; 2026 <strong>DropX Logistica</strong> — Plataforma Integral de Envíos y Seguimiento.</p>
+        </footer>
+        <script>
+            // Capturamos los elementos del formulario y de la interfaz
+            const formLogin = document.getElementById('form-login');
+            const inputUsuario = document.getElementById('usuario');
+            const mensajeEstado = document.getElementById('mensaje-estado');
+            const seccionOpciones = document.getElementById('seccion-opciones');
+            const btnLogin = document.getElementById('btn-login');
+
+            // Evento interactivo cuando el usuario envía el formulario
+            formLogin.addEventListener('submit', function(evento) {
+                // Evitamos que la página se recargue en blanco
+                evento.preventDefault();
+
+                const usuario = inputUsuario.value.trim();
+
+                // Animación visual en el botón de estado "Cargando"
+                btnLogin.querySelector('span').innerText = 'Validando acceso...';
+
+                setTimeout(() => {
+                    btnLogin.querySelector('span').innerText = 'Iniciar Sesión';
+
+                    // Mostramos mensaje interactivo con el nombre del usuario
+                    mensajeEstado.style.display = 'flex';
+                    mensajeEstado.className = 'alerta alerta-exito';
+                    mensajeEstado.innerHTML = `✓ ¡Bienvenido(a), <strong>${usuario}</strong>! Acceso concedido al panel.`;
+
+                    // Resaltamos visualmente el panel de opciones
+                    seccionOpciones.classList.add('resaltado');
+
+                    // En pantallas móviles, desplazamos suavemente hacia las opciones
+                    if (window.innerWidth < 900) {
+                        seccionOpciones.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 400);
+            });
+        </script>
+    </body>
+</html>
