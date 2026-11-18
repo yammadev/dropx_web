@@ -1,0 +1,71 @@
+name: Reiniciar base de datos
+
+# Borra TODAS las tablas de la base de producción (Aiven) y la deja de nuevo con:
+# - Datos básicos: solo los usuarios iniciales (admin, manager y courier).
+# - Datos de prueba: usuarios iniciales, repartidores y paquetes de prueba.
+# Solo se ejecuta a mano: Actions > Reiniciar base de datos > Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: 'Datos con los que queda la base'
+        type: choice
+        options:
+          - Datos básicos
+          - Datos de prueba
+      confirmation:
+        description: 'Escriba BORRAR para confirmar (se pierden todos los datos)'
+        required: true
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      # ---------- 1. Confirmación ----------
+      - name: Confirmar
+        if: inputs.confirmation != 'BORRAR'
+        run: |
+          echo "::error::No se escribió BORRAR: la base de datos no se modificó"
+          exit 1
+
+      # ---------- 2. Proyecto y dependencias ----------
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      # ---------- 3. Reiniciar la base ----------
+      # Los datos de conexión son los mismos de Render, guardados como secretos del repositorio.
+      # El certificado de Aiven (contenido de ca.pem) se guarda en un archivo antes de conectar.
+      - name: Reiniciar
+        env:
+          TZ: America/Bogota
+          DATA: ${{ inputs.data }}
+          DB_CONNECTION: mysql
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_SSL_CA_PEM: ${{ secrets.DB_SSL_CA_PEM }}
+          SEED_ADMIN_NAME: ${{ vars.SEED_ADMIN_NAME }}
+          SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+          SEED_MANAGER_NAME: ${{ vars.SEED_MANAGER_NAME }}
+          SEED_MANAGER_PASSWORD: ${{ secrets.SEED_MANAGER_PASSWORD }}
+          SEED_COURIER_NAME: ${{ vars.SEED_COURIER_NAME }}
+          SEED_COURIER_PASSWORD: ${{ secrets.SEED_COURIER_PASSWORD }}
+        run: |
+          if [ -z "$DB_HOST" ] || [ -z "$DB_SSL_CA_PEM" ]; then
+            echo "::error::Faltan los secretos de la base de datos (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSL_CA_PEM)"
+            exit 1
+          fi
+          echo "$DB_SSL_CA_PEM" > "$RUNNER_TEMP/ca.pem"
+          export DB_SSL_CA="$RUNNER_TEMP/ca.pem"
+
+          if [ "$DATA" = "Datos de prueba" ]; then
+            flask --app app db:test --yes
+          else
+            flask --app app db:fresh --yes
+          fi

@@ -169,6 +169,24 @@ En el repositorio, **Settings > Secrets and variables > Actions > New repository
 
 Desde ese momento, cada push a `main` queda publicado en unos minutos; el avance se ve en la pestaña **Actions** de GitHub y en **Events** de Render.
 
+### 4. Reiniciar la base de datos (opcional)
+
+La acción **Actions > Reiniciar base de datos > Run workflow** borra todas las tablas de la base de Aiven y la deja con una de dos opciones:
+
+- **Datos básicos:** solo los usuarios iniciales (admin, manager y courier).
+- **Datos de prueba:** los usuarios iniciales, repartidores y paquetes de prueba.
+
+Para confirmar se escribe `BORRAR`. Necesita estos datos en **Settings > Secrets and variables > Actions** (los mismos de Render):
+
+| Tipo | Nombre | Valor |
+|---|---|---|
+| Secreto | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Los datos de Aiven |
+| Secreto | `DB_SSL_CA_PEM` | El contenido completo del archivo `ca.pem` |
+| Secreto | `SEED_ADMIN_PASSWORD`, `SEED_MANAGER_PASSWORD`, `SEED_COURIER_PASSWORD` | Contraseñas de los usuarios iniciales |
+| Variable | `SEED_ADMIN_NAME`, `SEED_MANAGER_NAME`, `SEED_COURIER_NAME` | Opcional: nombres de los usuarios iniciales |
+
+Los repartidores de prueba usan la contraseña `SEED_COURIER_PASSWORD`.
+
 En el plan Free, la web se apaga tras 15 minutos sin visitas y la primera visita siguiente tarda cerca de un minuto en responder. Los archivos del servidor se borran en cada deploy, por eso la firma de entrega se guarda en la base de datos.
 
 ## API
@@ -201,6 +219,7 @@ Autenticación con JWT para la app móvil. Las rutas están documentadas en [doc
 dropx_web/
 ├── .github/
 │   └── workflows/
+│       ├── database.yml  # GitHub Actions: reinicia la base de producción (a mano)
 │       └── deploy.yml    # GitHub Actions: pruebas en cada push y deploy en Render desde main
 ├── app/
 │   ├── __init__.py       # Crea la app y conecta las extensiones

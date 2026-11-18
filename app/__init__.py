@@ -67,6 +67,12 @@ def create_app():
     app.register_blueprint(api.bp)
     csrf.exempt(api.bp)  # la API usa tokens JWT, no cookies, así que no necesita CSRF
 
+    # Revisión de salud: Render la consulta (Health Check Path = /health) para saber
+    # que el servidor encendió antes de dejarlo recibir visitas
+    @app.route('/health')
+    def health():
+        return {'status': 'ok'}
+
     # Filtros de plantilla (se usan así: {{ nombre|tone }})
     @app.template_filter('initials')
     def initials(name):
