@@ -93,8 +93,7 @@ def create_app():
     @app.template_filter('short_date')
     def short_date(date):
         """Fecha corta en español: '05 Nov'."""
-        months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-        return f'{date.day:02d} {months[date.month - 1]}' if date else '—'
+        return f'{date.day:02d} {models.MONTHS[date.month - 1]}' if date else '—'
 
     # Comandos de consola: db:seed, db:fresh, db:upgrade, db:migrate y key:generate
     from app import commands

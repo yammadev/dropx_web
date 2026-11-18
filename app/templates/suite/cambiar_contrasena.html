@@ -1,0 +1,18 @@
+{% extends 'suite/auth_base.html' %}
+{% import '_ui.html' as ui %}
+{% from '_macros.html' import input %}
+{% block title %}Cambiar contraseña{% endblock %}
+
+{% block auth_content %}
+<form method="post" class="{{ ui.card }} grid gap-4 p-6 text-left">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><h1 class="text-2xl font-extrabold tracking-tight">Cambie su contraseña</h1><p class="mt-1 text-muted">Ingrese su correo, la contraseña actual y la nueva.</p></div>
+    {{ input('email', 'Correo electrónico', type='email', required=true, extra='autocomplete=username autofocus') }}
+    {{ input('current_password', 'Contraseña actual', type='password', required=true, extra='autocomplete=current-password') }}
+    {{ input('new_password', 'Nueva contraseña', type='password', required=true, hint='Mínimo 8 caracteres.', extra='minlength=8 autocomplete=new-password') }}
+    {{ input('confirm_password', 'Confirmar nueva contraseña', type='password', required=true, extra='minlength=8 autocomplete=new-password') }}
+    <button class="{{ ui.btn }} w-full">Cambiar contraseña</button>
+</form>
+{% endblock %}
+
+{% block footnote %}Después del cambio, la nueva contraseña sirve en la app y en la Suite.{% endblock %}

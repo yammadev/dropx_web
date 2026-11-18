@@ -9,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from app import db
-from app.models import STATUSES, Package, PackageEvent, User
+from app.models import MIN_PASSWORD_LENGTH, MONTHS, STATUSES, Package, PackageEvent, User
 
 # Panel web (Suite logística): todas las rutas de este archivo empiezan con /suite
 bp = Blueprint('suite', __name__, url_prefix='/suite')
@@ -23,8 +23,6 @@ MONTHLY_GOAL = 50
 # Zona de Cartagena donde se pueden marcar ubicaciones: ((lat. sur, long. oeste), (lat. norte, long. este))
 CARTAGENA_BOUNDS = ((10.25, -75.70), (10.55, -75.40))
 
-MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-
 # Campos de texto del formulario de paquetes
 PACKAGE_TEXT_FIELDS = (
     'sender_name', 'sender_document', 'sender_phone', 'origin_address',
@@ -37,7 +35,6 @@ PACKAGE_REQUIRED_FIELDS = (
 )
 
 
-# Los mapas de las plantillas usan los mismos límites
 # Datos de un paquete para dibujarlo en los mapas (origen, destino y estado)
 def map_point(p):
     return {
@@ -52,6 +49,7 @@ def map_point(p):
     }
 
 
+# Los mapas de las plantillas usan los mismos límites
 @bp.context_processor
 def map_bounds():
     return {'cartagena_bounds': CARTAGENA_BOUNDS}
@@ -118,6 +116,31 @@ def recuperar():
     return render_template('suite/recuperar.html')
 
 
+# Cambio de contraseña sin sesión: sirve para cualquier rol. Los repartidores llegan desde
+# el botón "Cambiar contraseña" del perfil de la app, porque ellos no pueden entrar a la Suite.
+@bp.route('/cambiar-contrasena', methods=['GET', 'POST'])
+def cambiar_contrasena():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        current = request.form.get('current_password', '')
+        new = request.form.get('new_password', '')
+        user = User.query.filter_by(email=email).first()
+
+        if not user or not user.check_password(current):
+            flash('El correo o la contraseña actual no son correctos.', 'danger')
+        elif len(new) < MIN_PASSWORD_LENGTH:
+            flash(f'La nueva contraseña debe tener mínimo {MIN_PASSWORD_LENGTH} caracteres.', 'danger')
+        elif new != request.form.get('confirm_password', ''):
+            flash('La confirmación no coincide con la nueva contraseña.', 'danger')
+        else:
+            user.set_password(new)
+            db.session.commit()
+            flash('Contraseña actualizada. Ya puede iniciar sesión con la nueva contraseña.', 'success')
+            return redirect(url_for('suite.cambiar_contrasena'))
+
+    return render_template('suite/cambiar_contrasena.html')
+
+
 @bp.route('/logout')
 def logout():
     logout_user()
@@ -177,16 +200,18 @@ def count_created(year, month):
     return Package.query.filter(Package.created_at >= start, Package.created_at < end).count()
 
 
-def courier_deliveries():
-    """Entregas del mes de cada courier, de mayor a menor: [(nombre, total), ...]"""
-    rows = (
-        db.session.query(User.name, func.count(Package.id))
+def monthly_deliveries(*columns):
+    """Consulta de las entregas del mes por courier, con las columnas pedidas y el total al final."""
+    return (
+        db.session.query(*columns, func.count(Package.id))
         .join(Package, Package.courier_id == User.id)
         .filter(Package.status == 'delivered', Package.delivered_at >= month_start(datetime.now()))
-        .group_by(User.id, User.name)
-        .order_by(func.count(Package.id).desc())
-        .all()
     )
+
+
+def courier_deliveries():
+    """Entregas del mes de cada courier, de mayor a menor: [(nombre, total), ...]"""
+    rows = monthly_deliveries(User.name).group_by(User.id, User.name).order_by(func.count(Package.id).desc())
     return [(name, total) for name, total in rows]
 
 
@@ -379,17 +404,27 @@ def eliminar_paquete(package_id):
 
 
 # ---------- Usuarios: repartidores (courier) y managers ----------
+def read_user_form():
+    """Nombre, correo y teléfono del formulario de usuarios (sin espacios sobrantes)."""
+    form = request.form
+    return form.get('name', '').strip(), form.get('email', '').strip().lower(), form.get('phone', '').strip()
+
+
+def email_taken(email, user_id=None):
+    """True si otro usuario (distinto de user_id) ya usa ese correo."""
+    other = User.query.filter_by(email=email).first()
+    return other is not None and other.id != user_id
+
+
 def create_user_from_form(role):
     """Crea un usuario con los datos del formulario. Devuelve (usuario, mensaje_de_error)."""
-    name = request.form.get('name', '').strip()
-    email = request.form.get('email', '').strip().lower()
-    phone = request.form.get('phone', '').strip()
+    name, email, phone = read_user_form()
     password = request.form.get('password', '')
 
     # El teléfono solo es obligatorio para los repartidores
-    if not name or '@' not in email or len(password) < 8 or (role == 'courier' and not phone):
-        return None, 'Complete todos los campos. La contraseña debe tener mínimo 8 caracteres.'
-    if User.query.filter_by(email=email).first():
+    if not name or '@' not in email or len(password) < MIN_PASSWORD_LENGTH or (role == 'courier' and not phone):
+        return None, f'Complete todos los campos. La contraseña debe tener mínimo {MIN_PASSWORD_LENGTH} caracteres.'
+    if email_taken(email):
         return None, 'Ya existe un usuario con ese correo.'
 
     user = User(name=name, email=email, role=role, phone=phone or None)
@@ -401,17 +436,14 @@ def create_user_from_form(role):
 
 def update_user_from_form(user):
     """Actualiza un usuario con los datos del formulario. Devuelve un mensaje de error o None."""
-    name = request.form.get('name', '').strip()
-    email = request.form.get('email', '').strip().lower()
-    phone = request.form.get('phone', '').strip()
+    name, email, phone = read_user_form()
     password = request.form.get('password', '')
 
     if not name or '@' not in email or (user.role == 'courier' and not phone):
         return 'Complete el nombre, el correo y, en repartidores, el teléfono.'
-    if password and len(password) < 8:
-        return 'La nueva contraseña debe tener mínimo 8 caracteres.'
-    other = User.query.filter_by(email=email).first()
-    if other and other.id != user.id:
+    if password and len(password) < MIN_PASSWORD_LENGTH:
+        return f'La nueva contraseña debe tener mínimo {MIN_PASSWORD_LENGTH} caracteres.'
+    if email_taken(email, user.id):
         return 'Ya existe un usuario con ese correo.'
 
     user.name = name
@@ -434,12 +466,7 @@ def repartidores():
     couriers = User.query.filter_by(role='courier').order_by(User.name).all()
 
     # Entregas del mes de cada courier: {id_courier: total}
-    deliveries = dict(
-        db.session.query(User.id, func.count(Package.id))
-        .join(Package, Package.courier_id == User.id)
-        .filter(Package.status == 'delivered', Package.delivered_at >= month_start(datetime.now()))
-        .group_by(User.id)
-    )
+    deliveries = dict(monthly_deliveries(User.id).group_by(User.id))
     # Paquetes recogidos (en curso) de cada courier: {id_courier: total}; con alguno, está "en ruta"
     on_route = dict(
         db.session.query(Package.courier_id, func.count()).filter_by(status='picked_up').group_by(Package.courier_id)
@@ -521,21 +548,18 @@ def eliminar_manager(manager_id):
 @login_required
 def perfil():
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        phone = request.form.get('phone', '').strip()
+        name, email, phone = read_user_form()
         current = request.form.get('current_password', '')
         new = request.form.get('new_password', '')
 
-        other = User.query.filter_by(email=email).first()
         if not name or '@' not in email:
             flash('Ingrese su nombre y un correo válido.', 'danger')
-        elif other and other.id != current_user.id:
+        elif email_taken(email, current_user.id):
             flash('Ya existe un usuario con ese correo.', 'danger')
         elif new and not current_user.check_password(current):
             flash('La contraseña actual no es correcta.', 'danger')
-        elif new and len(new) < 8:
-            flash('La nueva contraseña debe tener mínimo 8 caracteres.', 'danger')
+        elif new and len(new) < MIN_PASSWORD_LENGTH:
+            flash(f'La nueva contraseña debe tener mínimo {MIN_PASSWORD_LENGTH} caracteres.', 'danger')
         else:
             current_user.name = name
             current_user.email = email

@@ -8,7 +8,7 @@
         <a href="{{ url_for('public.index') }}" aria-label="DropX, volver al sitio"><img src="{{ url_for('static', filename='img/Logo.png') }}" alt="DropX" class="mx-auto h-16 w-auto"></a>
         <div class="text-left">{{ flashes() }}</div>
         {% block auth_content %}{% endblock %}
-        <p class="text-xs text-muted">Los repartidores ingresan desde la app DropX.</p>
+        <p class="text-xs text-muted">{% block footnote %}Los repartidores ingresan desde la app DropX.{% endblock %}</p>
     </div>
 </div>
 {% endblock %}

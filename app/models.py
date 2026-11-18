@@ -7,9 +7,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import db, login_manager
 
 # ---------- Constantes ----------
-# Roles del sistema
-ROLES = ('admin', 'manager', 'courier')
-
 # Estados de una guía (clave guardada en la base de datos -> texto que se muestra).
 # Son los mismos estados de la app: Pendiente, Recogido, Entregado y Con novedad.
 STATUSES = {
@@ -18,6 +15,12 @@ STATUSES = {
     'delivered': 'Entregado',
     'issue': 'Con novedad',
 }
+
+# Meses abreviados en español (gráficas del dashboard y fechas cortas)
+MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+# Largo mínimo de una contraseña nueva
+MIN_PASSWORD_LENGTH = 8
 
 
 # ---------- Usuarios ----------

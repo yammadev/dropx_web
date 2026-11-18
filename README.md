@@ -93,7 +93,7 @@ Mientras se diseña, `npm run css:watch` regenera el CSS al guardar cada cambio.
 Toda la operación está limitada a Cartagena de Indias.
 
 - **Sitio público:** landing (hero con video institucional, servicios, proceso, nosotros, Suite y contacto por WhatsApp), rastreo de guías (sin datos personales), ser aliado (por WhatsApp), privacidad y términos.
-- **Suite (`/suite`):** panel para `admin` y `manager`: dashboard, paquetes (crear, filtrar, ver detalle y editar; solo el `admin` elimina), repartidores (crear y editar; solo el `admin` elimina), perfil propio (datos y contraseña) y, solo para `admin`: managers (crear, editar y eliminar) y reportes (solo interfaz).
+- **Suite (`/suite`):** panel para `admin` y `manager`: dashboard, paquetes (crear, filtrar, ver detalle y editar; solo el `admin` elimina), repartidores (crear y editar; solo el `admin` elimina), perfil propio (datos y contraseña), cambio de contraseña sin sesión en `/suite/cambiar-contrasena` (para cualquier rol; la app la abre desde el perfil del repartidor) y, solo para `admin`: managers (crear, editar y eliminar) y reportes (solo interfaz).
 - **API (`/api`):** autenticación con JWT para la app móvil.
 
 | Rol | Qué hace | Desde dónde ingresa |
@@ -225,7 +225,7 @@ dropx_web/
 │   ├── __init__.py       # Crea la app y conecta las extensiones
 │   ├── models.py         # Tablas: users, packages y package_events
 │   ├── public.py         # Rutas del sitio público (inicio, rastreo, ser aliado)
-│   ├── suite.py          # Rutas del panel web (login, paquetes, mapa, reportes, repartidores, managers)
+│   ├── suite.py          # Rutas del panel web (login, cambio de contraseña, paquetes, mapa, reportes, repartidores, managers)
 │   ├── api.py            # Rutas de la API (login, paquetes, cambio de estado y firma)
 │   ├── commands.py       # Comandos: db:seed, db:test, db:fresh, db:upgrade, db:migrate y key:generate
 │   ├── templates/

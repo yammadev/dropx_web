@@ -1,6 +1,6 @@
 """Pruebas del panel web (/suite): permisos, paquetes, mapa y reportes."""
 from app.models import Package
-from tests.conftest import suite_login
+from tests.conftest import PASSWORD, suite_login
 
 # Datos mínimos del formulario de un paquete nuevo
 PAQUETE = {
@@ -95,3 +95,26 @@ def test_solo_admin_elimina_paquetes(client, app):
     client.post('/suite/paquetes/1/eliminar')
     with app.app_context():
         assert Package.query.count() == 0
+
+
+# ---------- Cambio de contraseña sin sesión (lo abre la app desde el perfil) ----------
+def test_cambiar_contrasena_sin_sesion(client):
+    datos = {'email': 'courier@test.com', 'current_password': PASSWORD,
+             'new_password': 'nueva-clave-1', 'confirm_password': 'nueva-clave-1'}
+    assert client.get('/suite/cambiar-contrasena').status_code == 200
+    assert client.post('/suite/cambiar-contrasena', data=datos).status_code == 302  # cambio correcto
+    # La API (app móvil) ya acepta la nueva y rechaza la anterior
+    nueva = client.post('/api/auth/login', json={'email': 'courier@test.com', 'password': 'nueva-clave-1'})
+    vieja = client.post('/api/auth/login', json={'email': 'courier@test.com', 'password': PASSWORD})
+    assert nueva.status_code == 200 and vieja.status_code == 401
+
+
+def test_cambiar_contrasena_valida_los_datos(client):
+    base = {'email': 'courier@test.com', 'current_password': PASSWORD,
+            'new_password': 'nueva-clave-1', 'confirm_password': 'nueva-clave-1'}
+    # Contraseña actual incorrecta, nueva muy corta y confirmación distinta: no cambia nada
+    for cambio in ({'current_password': 'otra-cosa'}, {'new_password': 'corta', 'confirm_password': 'corta'},
+                   {'confirm_password': 'diferente-1'}):
+        assert client.post('/suite/cambiar-contrasena', data=base | cambio).status_code == 200
+    assert client.post('/api/auth/login', json={'email': 'courier@test.com', 'password': PASSWORD}).status_code == 200
+
