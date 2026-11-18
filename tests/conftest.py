@@ -16,7 +16,6 @@ def app(tmp_path, monkeypatch):
     monkeypatch.setattr(Config, 'SQLALCHEMY_DATABASE_URI', f'sqlite:///{tmp_path / "test.db"}')
     monkeypatch.setattr(Config, 'SECRET_KEY', 'clave-de-pruebas-clave-de-pruebas-123')
     app = create_app()
-    app.instance_path = str(tmp_path)  # las firmas también se guardan en la carpeta temporal
     app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)  # sin CSRF para poder enviar formularios
 
     with app.app_context():

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import click
-from flask import current_app
 from flask.cli import with_appcontext
 from flask_migrate import migrate, upgrade
 
@@ -63,13 +62,10 @@ def create_users():
 
 
 def reset_database():
-    """Borra TODAS las tablas (y las firmas guardadas) y las crea de nuevo con las migraciones."""
-    # Las firmas de entrega son archivos en instance/signatures: sin sus paquetes ya no sirven
-    for signature in (Path(current_app.instance_path) / 'signatures').glob('*.png'):
-        signature.unlink()
+    """Borra TODAS las tablas y las crea de nuevo con las migraciones."""
     db.reflect()  # lee las tablas que existen en la base (incluida alembic_version)
     db.drop_all()  # las borra todas
-    click.echo('Tablas y firmas eliminadas.')
+    click.echo('Tablas eliminadas.')
     upgrade()  # vuelve a crearlas
 
 

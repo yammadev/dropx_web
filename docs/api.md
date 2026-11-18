@@ -113,7 +113,7 @@ Campos adicionales:
 | Campo | Cuándo | Descripción |
 |---|---|---|
 | `reason` | Obligatorio si `status` es `issue` | Motivo de la novedad (máximo 100 caracteres). |
-| `signature` | Opcional si `status` es `delivered` | Firma de quien recibe: imagen PNG en base64 (máximo 500 KB). Se guarda en `instance/signatures/` y se ve en el detalle del paquete de la Suite. |
+| `signature` | Opcional si `status` es `delivered` | Firma de quien recibe: imagen PNG en base64 (máximo 500 KB). Se guarda en la base de datos (columna `signature` del paquete) y se ve en el detalle del paquete de la Suite. |
 
 Cambios permitidos:
 

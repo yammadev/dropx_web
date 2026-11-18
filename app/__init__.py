@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 
@@ -37,7 +38,10 @@ def create_app():
     """Crea y configura la aplicación (patrón "application factory" de Flask)."""
     app = Flask(__name__)
     app.config.from_object(Config)
-    os.makedirs(app.instance_path, exist_ok=True)  # aquí viven el archivo SQLite y las firmas
+    # En producción (Render) la app queda detrás de un proxy que recibe el HTTPS: así Flask sabe
+    # que la visita llegó por HTTPS y con qué dirección IP
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+    os.makedirs(app.instance_path, exist_ok=True)  # aquí vive el archivo SQLite de desarrollo
 
     # Si falta la SECRET_KEY el sitio avisa cómo crearla. No se lanza un error al
     # arrancar para que el comando "flask --app app key:generate" pueda ejecutarse.

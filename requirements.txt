@@ -7,3 +7,4 @@ Flask-WTF>=1.2
 PyMySQL>=1.1
 python-dotenv>=1.0
 cryptography>=42  # MySQL 8 (Aiven) inicia sesión con caching_sha2_password y PyMySQL lo necesita
+gunicorn>=23  # servidor web de producción (Render)

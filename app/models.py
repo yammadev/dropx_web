@@ -1,7 +1,7 @@
-from pathlib import Path
+from datetime import datetime
 
-from flask import current_app
 from flask_login import UserMixin
+from sqlalchemy.dialects.mysql import MEDIUMBLOB
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, login_manager
@@ -32,7 +32,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # admin, manager o courier
     phone = db.Column(db.String(30))  # se usa en los couriers
-    created_at = db.Column(db.DateTime, server_default=db.text('CURRENT_TIMESTAMP'))
+    created_at = db.Column(db.DateTime, default=datetime.now, server_default=db.text('CURRENT_TIMESTAMP'))
 
     # La contraseña nunca se guarda en texto plano
     def set_password(self, password):
@@ -81,11 +81,15 @@ class Package(db.Model):
     # Repartidor asignado (vacío mientras no se asigne)
     courier_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
 
-    created_at = db.Column(db.DateTime, server_default=db.text('CURRENT_TIMESTAMP'))
+    created_at = db.Column(db.DateTime, default=datetime.now, server_default=db.text('CURRENT_TIMESTAMP'))
     updated_at = db.Column(
-        db.DateTime, server_default=db.text('CURRENT_TIMESTAMP'), onupdate=db.func.now()
+        db.DateTime, default=datetime.now, server_default=db.text('CURRENT_TIMESTAMP'), onupdate=datetime.now
     )
     delivered_at = db.Column(db.DateTime)  # se llena cuando el estado pasa a "delivered"
+
+    # Firma de quien recibe: imagen PNG guardada en la base de datos (en MySQL, MEDIUMBLOB de hasta 16 MB).
+    # "deferred" hace que solo se lea cuando se usa, para que las listas de paquetes no la carguen.
+    signature = db.deferred(db.Column(db.LargeBinary().with_variant(MEDIUMBLOB(), 'mysql')))
 
     courier = db.relationship('User')
     events = db.relationship(
@@ -93,11 +97,6 @@ class Package(db.Model):
         order_by='PackageEvent.id.desc()',  # el más reciente primero
         cascade='all, delete-orphan',  # al borrar el paquete se borra su historial
     )
-
-    # La firma de quien recibe se guarda como imagen en instance/signatures/<id>.png
-    @property
-    def signature_path(self):
-        return Path(current_app.instance_path) / 'signatures' / f'{self.id}.png'
 
     @property
     def status_label(self):
@@ -144,7 +143,7 @@ class PackageEvent(db.Model):
     )
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, server_default=db.text('CURRENT_TIMESTAMP'))
+    created_at = db.Column(db.DateTime, default=datetime.now, server_default=db.text('CURRENT_TIMESTAMP'))
 
 
 # Flask-Login usa esta función para saber quién tiene la sesión abierta

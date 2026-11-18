@@ -46,7 +46,7 @@
                 {% if package.status == 'issue' %}{{ field('Motivo de la novedad', package.issue_reason or 'Sin motivo') }}{% endif %}
             </div>
             {# Firma de quien recibió (la guarda la app al entregar) #}
-            {% if package.signature_path.exists() %}
+            {% if package.signature %}
             <span class="mb-1.5 mt-4 block text-xs text-muted">Firma de quien recibe</span>
             <img src="{{ url_for('suite.firma', package_id=package.id) }}" alt="Firma de quien recibe" class="h-32 rounded-xl border border-line bg-white">
             {% endif %}

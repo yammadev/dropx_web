@@ -22,8 +22,5 @@ node_modules/
 # Other
 REQ.md
 
-# Firmas guardadas por la API
-instance/*
-!instance/signatures/
-instance/signatures/*
-!instance/signatures/.gitkeep
+# Base SQLite de desarrollo
+instance/

@@ -79,13 +79,13 @@ def test_el_motivo_se_limita_a_100_caracteres(client):
 
 
 # ---------- Firma de entrega ----------
-def test_entrega_con_firma_guarda_el_archivo(client, app):
+def test_entrega_con_firma_la_guarda_en_la_base(client, app):
     headers = api_headers(client, 'courier@test.com')
     change_status(client, headers, 'picked_up')
     assert change_status(client, headers, 'delivered', signature=PNG).status_code == 200
-    # La firma queda como archivo PNG en instance/signatures/
+    # La firma queda guardada como imagen PNG en la columna "signature" del paquete
     with app.app_context():
-        assert db.session.get(Package, 1).signature_path.exists()
+        assert db.session.get(Package, 1).signature == base64.b64decode(PNG)
 
 
 def test_firma_invalida_se_rechaza(client):

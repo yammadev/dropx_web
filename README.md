@@ -116,6 +116,61 @@ pytest
 
 Cubren la API (login, estados, motivo de novedad y firma), la Suite (permisos, paquetes, límites de Cartagena y reportes), el sitio público y las migraciones desde cero.
 
+GitHub Actions las corre en cada push y en cada pull request (`.github/workflows/deploy.yml`).
+
+## Producción (Render + Aiven)
+
+La web corre en [Render](https://render.com) (plan Free) y la base de datos es MySQL en [Aiven](https://aiven.io). Cada push a `main` corre las pruebas en GitHub Actions y, si pasan, publica ese commit en Render.
+
+### 1. Base de datos en Aiven
+
+1. Crear un servicio **MySQL** (plan Free).
+2. En **Overview > Connection information** se copian `Host`, `Port`, `User` (`avnadmin`), `Password` y `Database name` (`defaultdb`).
+3. Descargar el **CA certificate** (`ca.pem`).
+
+### 2. Web service en Render
+
+1. **New > Web Service**, conectar el repositorio y elegir la rama `main`.
+2. Configuración:
+
+| Campo | Valor |
+|---|---|
+| Language | `Python 3` |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `flask --app app db:upgrade && flask --app app db:seed && gunicorn --bind 0.0.0.0:$PORT "app:create_app()"` |
+| Instance Type | `Free` |
+
+El comando de inicio aplica las migraciones y crea los usuarios iniciales (los que ya existen se omiten) antes de encender el servidor, porque el plan Free no tiene comando previo al deploy ni consola.
+
+3. En **Environment > Environment Variables**:
+
+| Variable | Valor |
+|---|---|
+| `PYTHON_VERSION` | `3.12.8` |
+| `TZ` | `America/Bogota` (las fechas se guardan en hora de Colombia) |
+| `SECRET_KEY` | Una clave nueva: `flask --app app key:generate --show` |
+| `DB_CONNECTION` | `mysql` |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Los datos de Aiven |
+| `DB_SSL_CA` | `/etc/secrets/ca.pem` |
+| `WHATSAPP_ADVISOR_NUMBER` | Número del asesor |
+| `SEED_*_NAME`, `SEED_*_PASSWORD` | Nombres y contraseñas de los usuarios iniciales (claves fuertes) |
+
+4. En **Environment > Secret Files**, agregar un archivo llamado `ca.pem` con el contenido del certificado de Aiven.
+5. En **Settings > Build & Deploy**, poner **Auto-Deploy** en `Off`: el deploy lo hace GitHub Actions después de las pruebas.
+6. En **Settings > Deploy Hook**, copiar la dirección.
+
+### 3. Secreto en GitHub
+
+En el repositorio, **Settings > Secrets and variables > Actions > New repository secret**:
+
+| Nombre | Valor |
+|---|---|
+| `RENDER_DEPLOY_HOOK_URL` | La dirección del Deploy Hook de Render |
+
+Desde ese momento, cada push a `main` queda publicado en unos minutos; el avance se ve en la pestaña **Actions** de GitHub y en **Events** de Render.
+
+En el plan Free, la web se apaga tras 15 minutos sin visitas y la primera visita siguiente tarda cerca de un minuto en responder. Los archivos del servidor se borran en cada deploy, por eso la firma de entrega se guarda en la base de datos.
+
 ## API
 
 Autenticación con JWT para la app móvil. Las rutas están documentadas en [docs/api.md](docs/api.md).
@@ -127,14 +182,14 @@ Autenticación con JWT para la app móvil. Las rutas están documentadas en [doc
 | `SECRET_KEY` | Firma la sesión del panel y los tokens JWT. Obligatoria. |
 | `DB_CONNECTION` | `sqlite` (por defecto, archivo `instance/dropx.db`) o `mysql` (producción, ej: Aiven). |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Solo con `DB_CONNECTION=mysql`: conexión a MySQL (por defecto `localhost`, `3306`, `root`, sin contraseña y `dropx`). |
-| `DB_SSL_CA` | Opcional, solo MySQL. Ruta del certificado `.pem` para servicios en la nube que exigen SSL (ej: Aiven). |
+| `DB_SSL_CA` | Opcional, solo MySQL. Ruta del certificado `.pem` para servicios en la nube que exigen SSL (en Render: `/etc/secrets/ca.pem`). |
 | `JWT_EXPIRES_HOURS` | Duración del token de la API (por defecto, 168 horas = 7 días). |
 | `WHATSAPP_ADVISOR_NUMBER` | Número del asesor para el formulario de contacto. |
 | `SEED_*_NAME`, `SEED_*_PASSWORD` | Nombres y contraseñas de los usuarios que crea `db:seed` (admin, manager y courier). |
 
 ## Arquitectura
 
-- **`app/models.py`:** tablas `users`, `packages` y `package_events` (SQLAlchemy).
+- **`app/models.py`:** tablas `users`, `packages` (incluida la firma de entrega, como imagen PNG) y `package_events` (SQLAlchemy).
 - **`app/suite.py`, `app/public.py`, `app/api.py`:** rutas del panel, del sitio y de la API (un `Blueprint` por archivo).
 - **`app/commands.py`:** comandos `db:seed`, `db:test`, `db:fresh`, `db:upgrade`, `db:migrate` y `key:generate`.
 - **Diseño:** [Tailwind CSS](https://tailwindcss.com) v4: las clases van directamente en las plantillas, y los colores y la tipografía de la marca están en `app/static/css/input.css`. Las clases que se repiten (botones, tarjetas, campos) están en `app/templates/_ui.html` y los componentes en `_macros.html`. Iconos SVG, gráficas con Chart.js (copiado a `static/js/vendor/`) y mapas con [Leaflet](https://leafletjs.com) y OpenStreetMap (copiado a `static/vendor/leaflet/`), ambos instalados con npm. Diseño claro, sin modo oscuro. La imagen del hero es una foto local (`static/img/hero-bodega.jpg`), por lo que no depende de internet.
@@ -146,7 +201,7 @@ Autenticación con JWT para la app móvil. Las rutas están documentadas en [doc
 dropx_web/
 ├── .github/
 │   └── workflows/
-│       └── tests.yml     # GitHub Actions: corre las pruebas en cada push y pull request
+│       └── deploy.yml    # GitHub Actions: pruebas en cada push y deploy en Render desde main
 ├── app/
 │   ├── __init__.py       # Crea la app y conecta las extensiones
 │   ├── models.py         # Tablas: users, packages y package_events
@@ -166,15 +221,14 @@ dropx_web/
 │   ├── api.md            # Rutas de la API
 │   └── screenshots/      # Capturas del README
 ├── instance/             # Datos locales que no se suben a GitHub
-│   ├── dropx.db          # Base SQLite de desarrollo (se crea sola)
-│   └── signatures/       # Firmas de entrega (PNG), una por paquete
+│   └── dropx.db          # Base SQLite de desarrollo (se crea sola)
 ├── migrations/
 │   └── versions/         # Migraciones de la base de datos (Flask-Migrate)
 ├── tests/                # Pruebas con pytest: API, Suite, sitio público y migraciones
 ├── config.py             # Configuración (lee el .env)
 ├── package.json          # Comandos de npm (Tailwind, Chart.js y Leaflet)
 ├── pytest.ini            # Configuración de pytest
-├── requirements.txt      # Dependencias de Python
+├── requirements.txt      # Dependencias de Python (incluye gunicorn para producción)
 ├── requirements-dev.txt  # Dependencias de Python más pytest (para las pruebas)
 ├── .env.example          # Modelo del .env (el .env real no se sube a GitHub)
 ├── .gitignore

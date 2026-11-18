@@ -118,8 +118,7 @@ def change_status(package_id):
     item.issue_reason = reason if status == 'issue' else None
     description = f'{courier.name} reportó: {reason}.' if status == 'issue' else f'Actualizado por {courier.name}.'
     if signature:
-        item.signature_path.parent.mkdir(parents=True, exist_ok=True)
-        item.signature_path.write_bytes(signature)
+        item.signature = signature
         description = f'Entregado con firma de quien recibe ({courier.name}).'
     item.events.append(PackageEvent(title=STATUSES[status], description=description))
     db.session.commit()

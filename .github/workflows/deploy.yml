@@ -1,0 +1,39 @@
+name: Pruebas y deploy
+
+# Las pruebas corren en cada push y en cada pull request.
+# El deploy en Render solo ocurre con un push a main y si las pruebas pasaron.
+on:
+  push:
+  pull_request:
+
+jobs:
+  # ---------- 1. Pruebas ----------
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest
+
+  # ---------- 2. Deploy en Render ----------
+  deploy:
+    needs: pytest  # espera a que las pruebas terminen bien
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      # El Deploy Hook es una dirección secreta de Render: al llamarla con "ref", Render
+      # publica exactamente este commit. Se guarda en Settings > Secrets and variables > Actions.
+      - name: Avisar a Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::Falta el secreto RENDER_DEPLOY_HOOK_URL en el repositorio"
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK_URL&ref=$GITHUB_SHA"
